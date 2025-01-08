@@ -1,0 +1,23 @@
+.App {
+  min-height: 100vh;
+}
+
+.navbar {
+  margin-bottom: 20px;
+}
+
+.sidebar {
+  background-color: #f8f9fa;
+}
+
+.sidebar .nav-link {
+  font-size: 1.2rem;
+}
+
+.content-area {
+  padding: 20px;
+}
+
+h2 {
+  margin-bottom: 20px;
+}
