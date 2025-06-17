@@ -1,14 +1,13 @@
-import React, { useEffect, useState, Suspense } from "react";
+import React, { useEffect, useState, useCallback, Suspense } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Table, Button, Badge } from "react-bootstrap"; // Added Badge import
+import { Table, Button, Badge } from "react-bootstrap";
 import { deleteMail, fetchSentBox } from "../redux/mailSlice";
 
-// Lazy load the ReadMessageModal
 const ReadMessageModal = React.lazy(() => import("./ReadMessageModal"));
 
 const SentBox = () => {
-  const sentMessageData = useSelector((state) => state.mail.sent);
   const dispatch = useDispatch();
+  const sentMessageData = useSelector((state) => state.mail.sent);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
@@ -16,27 +15,45 @@ const SentBox = () => {
     dispatch(fetchSentBox());
   }, [dispatch]);
 
-  const handleDelete = (id) => {
-    if (window.confirm("Are you sure you want to delete this message?")) {
-      dispatch(deleteMail(id));
-    }
-  };
-
-  const handleOpenMessage = (message) => {
+  const handleOpenMessage = useCallback((message) => {
     setSelectedMessage(message);
     setShowModal(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setShowModal(false);
     setSelectedMessage(null);
-  };
+  }, []);
+
+  const handleDelete = useCallback(
+    (id) => {
+      if (window.confirm("Are you sure you want to delete this message?")) {
+        dispatch(deleteMail(id));
+      }
+    },
+    [dispatch]
+  );
+
+  const handleTableClick = useCallback(
+    (e) => {
+      const action = e.target.dataset.action;
+      const row = e.target.closest("tr[data-id]");
+      if (!row) return;
+      const id = row.dataset.id;
+      const message = sentMessageData.find((msg) => msg._id === id);
+      if (!message) return;
+
+      if (action === "open") handleOpenMessage(message);
+      else if (action === "delete") handleDelete(id);
+    },
+    [sentMessageData, handleOpenMessage, handleDelete]
+  );
 
   return (
     <div className="container mt-4">
       <h2>Sent Messages</h2>
-      {sentMessageData && sentMessageData.length > 0 ? (
-        <Table striped bordered hover>
+      {sentMessageData?.length > 0 ? (
+        <Table striped bordered hover onClick={handleTableClick}>
           <thead>
             <tr>
               <th>#</th>
@@ -49,33 +66,32 @@ const SentBox = () => {
           </thead>
           <tbody>
             {sentMessageData.map((message, index) => (
-              <tr key={message._id}>
+              <tr key={message._id} data-id={message._id}>
                 <td>{index + 1}</td>
                 <td>
-                  <Button
-                    variant="link"
-                    onClick={() => handleOpenMessage(message)}
+                  <button
+                    type="button"
+                    className="btn btn-link p-0"
+                    data-action="open"
                   >
                     {message.subject}
-                  </Button>
+                  </button>
                 </td>
                 <td>
-                  {message.isRead ? (
-                    <Badge bg="success">Read</Badge>
-                  ) : (
-                    <Badge bg="warning">Unread</Badge>
-                  )}
+                  <Badge bg={message.isRead ? "success" : "warning"}>
+                    {message.isRead ? "Read" : "Unread"}
+                  </Badge>
                 </td>
                 <td>{message.receiverEmail}</td>
                 <td>{new Date(message.sentAt).toLocaleString()}</td>
                 <td>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDelete(message._id)}
+                  <button
+                    type="button"
+                    className="btn btn-sm btn-danger"
+                    data-action="delete"
                   >
                     Delete
-                  </Button>
+                  </button>
                 </td>
               </tr>
             ))}
@@ -85,14 +101,15 @@ const SentBox = () => {
         <p>No sent messages available.</p>
       )}
 
-      {/* Suspense with fallback for ReadMessageModal */}
-      <Suspense fallback={<div>Loading message...</div>}>
-        <ReadMessageModal
-          show={showModal}
-          message={selectedMessage}
-          handleClose={handleCloseModal}
-        />
-      </Suspense>
+      {showModal && (
+        <Suspense fallback={<div>Loading message...</div>}>
+          <ReadMessageModal
+            show={showModal}
+            message={selectedMessage}
+            handleClose={handleCloseModal}
+          />
+        </Suspense>
+      )}
     </div>
   );
 };
