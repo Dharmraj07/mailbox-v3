@@ -3,7 +3,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { signin } from "../redux/authSlice";
 
-
 const SignIn = () => {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const dispatch = useDispatch();
@@ -19,16 +18,19 @@ const SignIn = () => {
     e.preventDefault();
     const result = await dispatch(signin(formData));
     if (signin.fulfilled.match(result)) {
-      navigate("/inbox"); // Redirect to Dashboard on successful sign-in
+      navigate("/inbox");
     }
   };
 
   return (
-    <div className="container mt-5">
-      <h2>Sign In</h2>
+    <div className="container mt-5" style={{ maxWidth: "500px" }}>
+      <h2 className="mb-4 text-center">Welcome Back 👋</h2>
       <form onSubmit={handleSubmit}>
+        {/* Email Field */}
         <div className="mb-3">
-          <label htmlFor="email" className="form-label">Email</label>
+          <label htmlFor="email" className="form-label">
+            Email Address
+          </label>
           <input
             type="email"
             id="email"
@@ -39,8 +41,12 @@ const SignIn = () => {
             required
           />
         </div>
+
+        {/* Password Field */}
         <div className="mb-3">
-          <label htmlFor="password" className="form-label">Password</label>
+          <label htmlFor="password" className="form-label">
+            Password
+          </label>
           <input
             type="password"
             id="password"
@@ -51,8 +57,20 @@ const SignIn = () => {
             required
           />
         </div>
-        {status === "failed" && <p className="text-danger">{error}</p>}
-        <button type="submit" className="btn btn-primary" disabled={status === "loading"}>
+
+        {/* Error Handling */}
+        {status === "failed" && error && (
+          <div className="alert alert-danger" role="alert">
+            {typeof error === "string" ? error : JSON.stringify(error)}
+          </div>
+        )}
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          className="btn btn-primary w-100"
+          disabled={status === "loading"}
+        >
           {status === "loading" ? "Signing In..." : "Sign In"}
         </button>
       </form>
