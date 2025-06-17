@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { Button, Container, Form, Nav, Navbar } from "react-bootstrap";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -13,22 +13,30 @@ const AppNavbar = () => {
   const [showComposeModal, setShowComposeModal] = useState(false);
   const [shouldUpdateSentBox, setShouldUpdateSentBox] = useState(false);
 
-  const handleLogout = () => {
+  // Memoized logout handler
+  const handleLogout = useCallback(() => {
     dispatch(logout());
     navigate("/");
-  };
+  }, [dispatch, navigate]);
 
-  const handleOpenCompose = () => setShowComposeModal(true);
+  // Memoized open compose
+  const handleOpenCompose = useCallback(() => {
+    setShowComposeModal(true);
+  }, []);
 
-  const handleCloseCompose = () => {
+  // Memoized close compose
+  const handleCloseCompose = useCallback(() => {
     setShowComposeModal(false);
     if (shouldUpdateSentBox) {
       navigate("/sent");
       setShouldUpdateSentBox(false);
     }
-  };
+  }, [shouldUpdateSentBox, navigate]);
 
-  const handleComposeSuccess = () => setShouldUpdateSentBox(true);
+  // Memoized compose success handler
+  const handleComposeSuccess = useCallback(() => {
+    setShouldUpdateSentBox(true);
+  }, []);
 
   return (
     <>
